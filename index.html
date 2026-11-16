@@ -1,0 +1,1677 @@
+<title>ระบบติดตามการส่งงาน — ห้องเรียนครูเกริก</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap">
+
+<style>
+/* ── TOKENS ── */
+:root {
+  --pri:    #04543f;
+  --pri-h:  #04653c;
+  --pri-l:  rgba(4,84,63,.12);
+  --sec:    #fccda3;
+  --sec-d:  #f5a870;
+  --bg:     #f2f7f5;
+  --surf:   #ffffff;
+  --surf2:  #f7faf9;
+  --txt:    #0f1c18;
+  --txt2:   #4d6960;
+  --brd:    #cddbd6;
+  --ok:     #15803d;
+  --ok-bg:  #dcfce7;
+  --err:    #b91c1c;
+  --err-bg: #fee2e2;
+  --warn:   #b45309;
+  --warn-bg:#fef3c7;
+  --r:      8px;
+  --sh:     0 1px 3px rgba(4,84,63,.08), 0 4px 12px rgba(4,84,63,.06);
+  color-scheme: light;
+}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:     #0b1813;
+  --surf:   #142019;
+  --surf2:  #1a2d24;
+  --txt:    #e4eeea;
+  --txt2:   #7fa395;
+  --brd:    #263d34;
+  --pri-l:  rgba(4,84,63,.25);
+  --ok-bg:  rgba(21,128,61,.2);
+  --err-bg: rgba(185,28,28,.2);
+  --warn-bg:rgba(180,83,9,.2);
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:     #0b1813;
+  --surf:   #142019;
+  --surf2:  #1a2d24;
+  --txt:    #e4eeea;
+  --txt2:   #7fa395;
+  --brd:    #263d34;
+  --pri-l:  rgba(4,84,63,.25);
+  --ok-bg:  rgba(21,128,61,.2);
+  --err-bg: rgba(185,28,28,.2);
+  --warn-bg:rgba(180,83,9,.2);
+  color-scheme:dark;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:'Noto Sans Thai',system-ui,sans-serif;
+  background:var(--bg);color:var(--txt);
+  font-size:15px;line-height:1.6;
+  padding-left:max(0px,env(safe-area-inset-left,0px));
+  padding-right:max(0px,env(safe-area-inset-right,0px));
+}
+
+/* ── NAV ── */
+.topbar{
+  position:sticky;top:env(safe-area-inset-top,0px);z-index:100;
+  background:var(--pri);
+  padding:0 max(16px,env(safe-area-inset-left,0px));
+  display:flex;align-items:center;gap:8px;
+  box-shadow:0 2px 8px rgba(0,0,0,.2);
+}
+.topbar-brand{
+  font-weight:700;font-size:17px;color:#fff;
+  padding:10px 0;white-space:nowrap;margin-right:auto;
+  display:flex;align-items:center;gap:8px;
+}
+.topbar-brand-text{display:flex;flex-direction:column;gap:1px}
+.topbar-brand-title{font-size:16px;font-weight:700;line-height:1.2}
+.topbar-brand-sub{font-size:11px;font-weight:400;opacity:.75;line-height:1.2}
+.topbar-brand svg{flex-shrink:0}
+.nav-tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.nav-tabs::-webkit-scrollbar{display:none}
+.nav-tab{
+  background:transparent;border:none;cursor:pointer;
+  color:rgba(255,255,255,.75);font-family:inherit;font-size:14px;font-weight:500;
+  padding:16px 14px;white-space:nowrap;border-bottom:3px solid transparent;
+  transition:color .15s,border-color .15s;display:flex;align-items:center;gap:5px;
+}
+.nav-tab:hover{color:#fff}
+.nav-tab.active{color:#fff;border-bottom-color:var(--sec)}
+.nav-tab .lock{font-size:11px;opacity:.7}
+
+/* ── CONTAINER ── */
+.view{display:none;padding:24px max(16px,env(safe-area-inset-left,0px));max-width:1100px;margin:0 auto}
+.view.active{display:block}
+
+/* ── PAGE HEADER ── */
+.page-header{margin-bottom:24px}
+.page-header h2{font-size:22px;font-weight:700;color:var(--pri);margin-bottom:4px}
+.page-header p{color:var(--txt2);font-size:14px}
+
+/* ── CARDS ── */
+.card{background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);box-shadow:var(--sh)}
+.card-header{padding:16px 20px;border-bottom:1px solid var(--brd);display:flex;align-items:center;gap:10px}
+.card-header h3{font-size:16px;font-weight:600;flex:1}
+.card-body{padding:20px}
+
+/* ── FILTER ROW ── */
+.filter-row{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:20px}
+.fgroup{display:flex;flex-direction:column;gap:4px;min-width:160px}
+.fgroup label{font-size:13px;font-weight:600;color:var(--txt2)}
+select,input[type=text],input[type=number],input[type=password]{
+  font-family:inherit;font-size:14px;color:var(--txt);
+  background:var(--surf);border:1px solid var(--brd);border-radius:6px;
+  padding:8px 10px;outline:none;transition:border-color .15s;width:100%;
+}
+select:focus,input:focus{border-color:var(--pri);box-shadow:0 0 0 3px var(--pri-l)}
+select{cursor:pointer;padding-right:28px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2304543f' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 8px center;background-size:12px;
+  appearance:none;-webkit-appearance:none;
+}
+
+/* ── BUTTONS ── */
+.btn{
+  font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;
+  border:none;border-radius:6px;padding:8px 16px;
+  display:inline-flex;align-items:center;gap:6px;transition:filter .15s,opacity .15s;
+  white-space:nowrap;
+}
+.btn:hover{filter:brightness(.93)}
+.btn:active{filter:brightness(.87)}
+.btn-primary{background:var(--pri);color:#fff}
+.btn-secondary{background:var(--sec);color:var(--pri)}
+.btn-outline{background:transparent;border:1.5px solid var(--brd);color:var(--txt)}
+.btn-outline:hover{border-color:var(--pri);color:var(--pri);filter:none}
+.btn-danger{background:var(--err-bg);color:var(--err);border:1.5px solid transparent}
+.btn-danger:hover{background:var(--err);color:#fff;filter:none}
+.btn-sm{font-size:12px;padding:5px 10px}
+.btn-icon{padding:6px;border-radius:6px;background:transparent;border:1.5px solid var(--brd);color:var(--txt);font-family:inherit;cursor:pointer;transition:all .15s;font-size:14px;line-height:1}
+.btn-icon:hover{border-color:var(--pri);color:var(--pri)}
+
+/* ── TABLE ── */
+.table-wrap{overflow-x:auto;border-radius:var(--r);border:1px solid var(--brd)}
+table{width:100%;border-collapse:collapse;min-width:500px}
+th{background:var(--pri);color:#fff;font-weight:600;font-size:13px;padding:11px 14px;text-align:left;white-space:nowrap}
+th:first-child{border-radius:var(--r) 0 0 0}
+th:last-child{border-radius:0 var(--r) 0 0}
+td{padding:10px 14px;font-size:14px;border-bottom:1px solid var(--brd);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:nth-child(even) td{background:var(--surf2)}
+tr:hover td{background:var(--pri-l)}
+.num{font-variant-numeric:tabular-nums;text-align:center}
+
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;padding:2px 8px;border-radius:20px}
+.badge-ok{background:var(--ok-bg);color:var(--ok)}
+.badge-err{background:var(--err-bg);color:var(--err)}
+.badge-warn{background:var(--warn-bg);color:var(--warn)}
+.badge-pri{background:var(--pri-l);color:var(--pri)}
+
+/* ── PROGRESS BAR ── */
+.progress-wrap{background:var(--brd);border-radius:20px;height:10px;overflow:hidden}
+.progress-bar{height:100%;border-radius:20px;background:var(--pri);transition:width .4s ease}
+.progress-label{display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px}
+.progress-label span:first-child{font-weight:600}
+.progress-label span:last-child{color:var(--txt2)}
+
+/* ── STAT CARDS ── */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:24px}
+.stat-card{background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);padding:16px 18px;border-left:4px solid var(--pri)}
+.stat-card .sc-val{font-size:28px;font-weight:700;color:var(--pri);line-height:1}
+.stat-card .sc-lbl{font-size:13px;color:var(--txt2);margin-top:4px}
+
+/* ── SCORE INPUT ── */
+.score-cell input{
+  width:70px;text-align:center;font-variant-numeric:tabular-nums;
+  padding:6px 4px;
+}
+.score-cell input.has-score{border-color:var(--pri);background:var(--pri-l)}
+
+/* ── PROGRESS PAGE ── */
+.student-spotlight{text-align:center;padding:28px 16px 20px}
+.student-spotlight .ss-room{font-size:13px;color:var(--txt2);margin-bottom:4px}
+.student-spotlight .ss-name{font-size:30px;font-weight:700;color:var(--pri)}
+.student-spotlight .ss-num{font-size:14px;color:var(--txt2)}
+.check-ok{color:var(--ok);font-size:18px;text-align:center}
+.check-err{color:var(--err);font-size:18px;text-align:center}
+.subject-progress{display:flex;flex-direction:column;gap:14px}
+
+/* ── MODAL ── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(2px);
+  z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;
+}
+.modal-overlay[hidden]{display:none!important}
+.modal{
+  background:var(--surf);border-radius:12px;width:100%;max-width:480px;
+  box-shadow:0 8px 32px rgba(0,0,0,.2);max-height:90dvh;display:flex;flex-direction:column;
+}
+.modal-header{padding:20px 24px 16px;border-bottom:1px solid var(--brd);display:flex;align-items:center;gap:10px}
+.modal-header h3{font-size:17px;font-weight:700;flex:1}
+.modal-close{background:transparent;border:none;cursor:pointer;font-size:20px;color:var(--txt2);padding:2px 6px;border-radius:4px;line-height:1}
+.modal-close:hover{background:var(--err-bg);color:var(--err)}
+.modal-body{padding:20px 24px;overflow-y:auto;display:flex;flex-direction:column;gap:14px}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--brd);display:flex;justify-content:flex-end;gap:8px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-group label{font-size:13px;font-weight:600;color:var(--txt2)}
+.form-group .hint{font-size:12px;color:var(--txt2)}
+
+/* ── CHECKBOX ── */
+.cb-row{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;cursor:pointer}
+.cb-row:hover{background:var(--surf2)}
+.cb-row input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--pri)}
+.cb-row label{cursor:pointer;font-size:14px;flex:1}
+.cb-group{border:1px solid var(--brd);border-radius:var(--r);max-height:200px;overflow-y:auto}
+
+/* ── SECTION TABS ── */
+.section-tabs{display:flex;gap:4px;margin-bottom:20px;border-bottom:2px solid var(--brd);padding-bottom:0;overflow-x:auto}
+.section-tab{background:transparent;border:none;cursor:pointer;font-family:inherit;font-size:14px;font-weight:500;color:var(--txt2);padding:10px 16px;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap}
+.section-tab.active{color:var(--pri);border-bottom-color:var(--pri);font-weight:700}
+.section-tab:hover:not(.active){color:var(--txt);border-bottom-color:var(--brd)}
+
+/* ── DATA TABLE ACTIONS ── */
+.dt-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.dt-toolbar .left{flex:1;display:flex;gap:8px;flex-wrap:wrap}
+
+/* ── LOGIN ── */
+.login-box{background:var(--surf);border:1px solid var(--brd);border-radius:12px;padding:40px;width:100%;max-width:380px;box-shadow:var(--sh)}
+.login-wrap{min-height:calc(100dvh - 60px);display:flex;align-items:center;justify-content:center;padding:24px}
+.login-brand{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:28px}
+.login-brand .logo{width:56px;height:56px;border-radius:12px;background:var(--pri);display:flex;align-items:center;justify-content:center;color:#fff;font-size:28px}
+.login-brand h2{font-size:20px;font-weight:700;text-align:center}
+.login-brand p{font-size:13px;color:var(--txt2);text-align:center}
+
+/* ── ADMIN GATE ── */
+.admin-gate{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:40dvh;gap:12px;text-align:center;padding:24px}
+.admin-gate svg{color:var(--txt2)}
+.admin-gate h3{font-size:18px;font-weight:600}
+.admin-gate p{color:var(--txt2);font-size:14px}
+
+/* ── EMPTY STATE ── */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;gap:8px;text-align:center}
+.empty svg{color:var(--brd)}
+.empty h4{font-size:16px;font-weight:600;color:var(--txt2)}
+.empty p{font-size:13px;color:var(--txt2)}
+
+/* ── TOAST ── */
+#toast{
+  position:fixed;bottom:max(24px,env(safe-area-inset-bottom,24px));left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--txt);color:var(--surf);padding:10px 20px;border-radius:30px;
+  font-size:14px;font-weight:500;z-index:999;transition:transform .25s;
+  pointer-events:none;white-space:nowrap;
+}
+#toast.show{transform:translateX(-50%) translateY(0)}
+
+/* ── UTILS ── */
+.mt8{margin-top:8px}.mt16{margin-top:16px}
+.text-muted{color:var(--txt2)}
+.text-sm{font-size:13px}
+.fw6{font-weight:600}
+.sep{height:1px;background:var(--brd);margin:12px 0}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px;background:var(--pri-l);color:var(--pri)}
+
+@media(max-width:600px){
+  .topbar-brand span{display:none}
+  .nav-tab{padding:14px 10px;font-size:13px}
+  .stat-grid{grid-template-columns:repeat(2,1fr)}
+  .modal{max-width:100%;margin:0;border-radius:12px 12px 0 0;position:fixed;bottom:0;left:0;right:0;max-height:85dvh}
+  .modal-overlay{align-items:flex-end;padding:0}
+}
+</style>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- LOADING OVERLAY -->
+<div id="loadingOverlay" style="position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
+  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" style="animation:spin 1s linear infinite">
+    <circle cx="24" cy="24" r="20" stroke="var(--brd)" stroke-width="4"/>
+    <path d="M24 4 a20 20 0 0 1 20 20" stroke="var(--pri)" stroke-width="4" stroke-linecap="round"/>
+  </svg>
+  <div style="color:var(--txt2);font-size:15px">กำลังโหลดข้อมูล...</div>
+</div>
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+
+<!-- LOGIN MODAL -->
+<div id="loginModal" class="modal-overlay" hidden>
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <h3>🔐 เข้าสู่ระบบแอดมิน</h3>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>รหัสผ่าน</label>
+        <input type="password" id="loginPwd" placeholder="ใส่รหัสผ่าน" autocomplete="current-password">
+        <span id="loginErr" class="hint" style="color:var(--err);display:none">รหัสผ่านไม่ถูกต้อง</span>
+      </div>
+    </div>
+    <div class="modal-footer" style="justify-content:space-between;align-items:center">
+      <button class="btn btn-outline btn-sm" onclick="showForgot()">ลืมรหัสผ่าน?</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-outline" onclick="closeLogin()">ยกเลิก</button>
+        <button class="btn btn-primary" onclick="doLogin()">เข้าสู่ระบบ</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FORGOT PASSWORD MODAL -->
+<div id="forgotModal" class="modal-overlay" hidden>
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <h3>📧 ติดต่อแอดมิน</h3>
+      <button class="modal-close" onclick="closeForgot()">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:14px;color:var(--txt2)">หากลืมรหัสผ่าน กรุณาติดต่อผู้ดูแลระบบที่อีเมล</p>
+      <div style="background:var(--surf2);border:1px solid var(--brd);border-radius:8px;padding:14px;display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <span style="font-size:15px;font-weight:600;color:var(--pri)" id="adminEmail">cookie.minimini@gmail.com</span>
+        <button class="btn btn-secondary btn-sm" onclick="copyEmail()">📋 คัดลอก</button>
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="openGmail()">📨 เปิด Gmail</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHANGE PASSWORD MODAL -->
+<div id="changePwdModal" class="modal-overlay" hidden>
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <h3>🔑 เปลี่ยนรหัสผ่าน</h3>
+      <button class="modal-close" onclick="$('changePwdModal').hidden=true">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>รหัสผ่านปัจจุบัน</label>
+        <input type="password" id="cpOld" placeholder="รหัสผ่านเดิม">
+      </div>
+      <div class="form-group">
+        <label>รหัสผ่านใหม่</label>
+        <input type="password" id="cpNew" placeholder="รหัสผ่านใหม่">
+      </div>
+      <div class="form-group">
+        <label>ยืนยันรหัสผ่านใหม่</label>
+        <input type="password" id="cpNew2" placeholder="พิมพ์รหัสผ่านใหม่อีกครั้ง">
+        <span id="cpErr" class="hint" style="color:var(--err);display:none"></span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="$('changePwdModal').hidden=true">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="doChangePwd()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUBJECT MODAL -->
+<div id="subjectModal" class="modal-overlay" hidden>
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="subjectModalTitle">เพิ่มวิชาเรียน</h3>
+      <button class="modal-close" onclick="$('subjectModal').hidden=true">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>ชื่อวิชา</label>
+        <input type="text" id="sbjName" placeholder="เช่น คณิตศาสตร์">
+      </div>
+      <div class="form-group">
+        <label>ห้องเรียน (เลือกได้หลายห้อง)</label>
+        <div class="cb-group" id="sbjRooms"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="$('subjectModal').hidden=true">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveSubject()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ROOM MODAL -->
+<div id="roomModal" class="modal-overlay" hidden>
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="roomModalTitle">สร้างห้องเรียน</h3>
+      <button class="modal-close" onclick="$('roomModal').hidden=true">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>ชื่อห้องเรียน</label>
+        <input type="text" id="roomName" placeholder="เช่น ป.4/1, ม.1/2">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="$('roomModal').hidden=true">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveRoom()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- CSV IMPORT MODAL -->
+<div id="csvModal" class="modal-overlay" hidden>
+  <div class="modal" style="max-width:600px">
+    <div class="modal-header" style="background:var(--pri);color:#fff;border-radius:var(--r) var(--r) 0 0;margin:-1px -1px 0">
+      <h3 style="color:#fff">📥 นำเข้ารายชื่อนักเรียน</h3>
+      <button class="modal-close" onclick="closeCsvModal()" style="color:#fff;opacity:.8">×</button>
+    </div>
+    <!-- step bar -->
+    <div style="display:flex;align-items:center;padding:14px 20px;gap:0;border-bottom:1px solid var(--brd)">
+      <div id="csvS1" style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--pri)"><span style="width:22px;height:22px;border-radius:50%;background:var(--pri);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">1</span>วางข้อมูล</div>
+      <div style="flex:1;height:2px;background:var(--brd);margin:0 8px" id="csvSep1"></div>
+      <div id="csvS2" style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--txt2)"><span id="csvS2num" style="width:22px;height:22px;border-radius:50%;border:2px solid var(--brd);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">2</span>ตรวจสอบ</div>
+    </div>
+    <div class="modal-body" id="csvPanelPaste">
+      <!-- selectors -->
+      <div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap">
+        <div style="flex:1;min-width:130px">
+          <label class="form-label">ห้องเรียน</label>
+          <select id="csvRoom" class="form-input" onchange="onCsvRoomChange()">
+            <option value="">-- เลือกห้อง --</option>
+          </select>
+        </div>
+        <div style="flex:2;min-width:160px;position:relative">
+          <label class="form-label">วิชา (เลือกได้หลายวิชา)</label>
+          <div id="csvSubjectPicker" onclick="toggleCsvSubjectDrop()" style="display:flex;flex-wrap:wrap;gap:5px;padding:7px 10px;border:1.5px solid var(--brd);border-radius:8px;min-height:38px;cursor:pointer;background:var(--surf)">
+            <span id="csvSubjectPh" style="color:var(--txt2);font-size:14px;user-select:none;line-height:1.6">— เลือกห้องก่อน —</span>
+          </div>
+          <div id="csvSubjectDrop" hidden style="position:absolute;z-index:200;background:var(--surf);border:1.5px solid var(--brd);border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.15);padding:6px;margin-top:3px;width:100%;max-height:200px;overflow-y:auto">
+            <div id="csvSubjectList"></div>
+          </div>
+        </div>
+      </div>
+      <!-- hint -->
+      <div style="background:var(--pri-l);border-left:3px solid var(--pri);border-radius:0 6px 6px 0;padding:9px 13px;margin-bottom:12px;font-size:13px;color:var(--txt2)">
+        📋 คัดลอกจาก Excel ได้เลย — คอลัมน์ <code style="background:var(--brd);padding:1px 5px;border-radius:4px;font-size:12px">ชื่อ-นามสกุล</code> และ <code style="background:var(--brd);padding:1px 5px;border-radius:4px;font-size:12px">เลขที่</code> คั่นด้วย Tab<br>
+        <span style="margin-top:3px;display:block">หรือพิมพ์: <code style="background:var(--brd);padding:1px 5px;border-radius:4px;font-size:12px">ชื่อ,เลขที่</code> ทีละบรรทัด</span>
+      </div>
+      <textarea id="csvTextarea" class="form-input" style="min-height:150px;font-family:monospace;font-size:13px;resize:vertical"
+        placeholder="วางรายชื่อที่นี่...&#10;ตัวอย่าง:&#10;เด็กชายสมชาย ใจดี	1&#10;เด็กหญิงสมหญิง รักเรียน	2" oninput="onCsvInput()"></textarea>
+    </div>
+    <!-- preview panel -->
+    <div class="modal-body" id="csvPanelPreview" hidden>
+      <div id="csvStats" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px"></div>
+      <div class="table-wrap" style="border-radius:8px;max-height:280px;overflow-y:auto">
+        <table><thead><tr><th>#</th><th>ชื่อ-นามสกุล</th><th>เลขที่</th><th>สถานะ</th></tr></thead>
+        <tbody id="csvPreviewBody"></tbody></table>
+      </div>
+    </div>
+    <!-- success panel -->
+    <div id="csvPanelSuccess" hidden style="padding:28px 20px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px">
+      <div style="width:52px;height:52px;border-radius:50%;background:var(--ok-bg);display:flex;align-items:center;justify-content:center">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--ok)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div style="font-size:17px;font-weight:700;color:var(--ok)">นำเข้าสำเร็จ!</div>
+      <div id="csvSuccessMsg" style="color:var(--txt2);font-size:14px"></div>
+    </div>
+    <div class="modal-footer" id="csvFooter1">
+      <button class="btn btn-outline" onclick="closeCsvModal()">ยกเลิก</button>
+      <button class="btn btn-primary" id="csvBtnNext" onclick="showCsvPreview()" disabled>ตรวจสอบ →</button>
+    </div>
+    <div class="modal-footer" id="csvFooter2" hidden>
+      <button class="btn btn-outline" onclick="backToCsvPaste()">← แก้ไข</button>
+      <button class="btn btn-primary" id="csvBtnImport" onclick="doImportCsv()">✓ นำเข้า <span id="csvImportCount">0</span> คน</button>
+    </div>
+    <div class="modal-footer" id="csvFooter3" hidden>
+      <button class="btn btn-primary" onclick="closeCsvModal()">ปิด</button>
+    </div>
+  </div>
+</div>
+
+<!-- STUDENT MODAL -->
+<div id="studentModal" class="modal-overlay" hidden>
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="studentModalTitle">เพิ่มนักเรียน</h3>
+      <button class="modal-close" onclick="$('studentModal').hidden=true">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>ชื่อ-นามสกุล</label>
+        <input type="text" id="stdName" placeholder="ชื่อ นามสกุล">
+      </div>
+      <div class="form-group">
+        <label>ห้องเรียน (ชั้น)</label>
+        <select id="stdRoom"><option value="">-- เลือกห้องเรียน --</option></select>
+      </div>
+      <div class="form-group">
+        <label>เลขที่</label>
+        <input type="number" id="stdNum" placeholder="เลขที่นักเรียน" min="1">
+      </div>
+      <div class="form-group">
+        <label>วิชาที่เรียน (เลือกได้หลายวิชา)</label>
+        <div class="cb-group" id="stdSubjects"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="$('studentModal').hidden=true">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveStudent()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ASSIGNMENT MODAL -->
+<div id="assignmentModal" class="modal-overlay" hidden>
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="assignModalTitle">เพิ่มงาน</h3>
+      <button class="modal-close" onclick="$('assignmentModal').hidden=true">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>ชื่องาน</label>
+        <input type="text" id="asnName" placeholder="ชื่องาน/ชิ้นงาน">
+      </div>
+      <div class="form-group">
+        <label>คะแนนเต็ม</label>
+        <input type="number" id="asnMax" placeholder="คะแนนเต็ม" min="1" value="10">
+      </div>
+      <div class="form-group">
+        <label>ห้องเรียน</label>
+        <select id="asnRoom" onchange="updateAsnSubjects()">
+          <option value="">-- เลือกห้องเรียน --</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>รายวิชา</label>
+        <select id="asnSubject"><option value="">-- เลือกวิชา --</option></select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="$('assignmentModal').hidden=true">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveAssignment()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOP BAR -->
+<nav class="topbar">
+  <div class="topbar-brand">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+    <div class="topbar-brand-text">
+      <span class="topbar-brand-title">ระบบติดตามการส่งงาน</span>
+      <span class="topbar-brand-sub">ห้องเรียนครูเกริก · ครูเกริกฤทธิ์ เมฆดี</span>
+    </div>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab admin-tab" data-view="home" onclick="goView('home')" hidden>🏠 หน้าหลัก</button>
+    <button class="nav-tab admin-tab" data-view="score" onclick="goView('score')" hidden>📝 บันทึกคะแนน</button>
+    <button class="nav-tab active" data-view="progress" onclick="goView('progress')">📊 ติดตามความคืบหน้า</button>
+    <button class="nav-tab admin-tab" data-view="data" onclick="goView('data')" hidden>⚙️ จัดการข้อมูล</button>
+  </div>
+  <button id="adminLoginBtn" class="nav-tab" onclick="showAdminLogin()" style="color:rgba(255,255,255,.6);font-size:13px;border-bottom-color:transparent;margin-left:4px">🔒 แอดมิน</button>
+  <button id="logoutBtn" class="nav-tab" onclick="doLogout()" hidden style="color:var(--sec);border-bottom-color:transparent;margin-left:4px">🚪 ออกจากระบบ</button>
+</nav>
+
+<!-- VIEW: HOME -->
+<div id="viewHome" class="view">
+  <div class="page-header">
+    <h2>📊 ภาพรวมการส่งงาน</h2>
+    <p>ความคืบหน้าการส่งงานของนักเรียนแยกตามระดับชั้นและรายวิชา</p>
+  </div>
+  <div class="filter-row">
+    <div class="fgroup">
+      <label>ห้องเรียน/ระดับชั้น</label>
+      <select id="homeRoom" onchange="renderHomeTable()"><option value="">-- ทุกห้อง --</option></select>
+    </div>
+    <div class="fgroup">
+      <label>รายวิชา</label>
+      <select id="homeSubject" onchange="renderHomeTable()"><option value="">-- ทุกวิชา --</option></select>
+    </div>
+    <div class="fgroup" style="justify-content:flex-end;align-self:flex-end">
+      <button class="btn btn-outline" onclick="resetHomeFilter()">↺ รีเซ็ต</button>
+    </div>
+  </div>
+  <div id="homeStats" class="stat-grid"></div>
+  <div id="homeCharts" style="margin-bottom:20px"></div>
+  <div class="card">
+    <div class="card-header">
+      <h3 id="homeTableTitle">รายชื่อนักเรียน — ความคืบหน้าการส่งงาน</h3>
+    </div>
+    <div class="card-body" style="padding:0">
+      <div id="homeTableWrap" class="table-wrap" style="border:none;border-radius:0 0 var(--r) var(--r)"></div>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW: SCORE ENTRY -->
+<div id="viewScore" class="view" hidden>
+  <div class="page-header">
+    <h2>✏️ บันทึกคะแนน</h2>
+    <p>เลือกห้องเรียนและวิชาเพื่อกรอกคะแนนนักเรียน</p>
+  </div>
+  <div class="filter-row">
+    <div class="fgroup">
+      <label>ห้องเรียน</label>
+      <select id="scoreRoom" onchange="onScoreRoomChange()"><option value="">-- เลือกห้องเรียน --</option></select>
+    </div>
+    <div class="fgroup">
+      <label>รายวิชา</label>
+      <select id="scoreSubject" onchange="renderScoreTable()"><option value="">-- เลือกวิชา --</option></select>
+    </div>
+    <div class="fgroup" style="justify-content:flex-end;align-self:flex-end">
+      <button class="btn btn-primary" onclick="saveScores()">💾 บันทึกทั้งหมด</button>
+    </div>
+  </div>
+  <div id="scoreTableWrap"></div>
+</div>
+
+<!-- VIEW: PROGRESS (PUBLIC) -->
+<div id="viewProgress" class="view active" hidden>
+  <div class="page-header">
+    <h2>🔍 ติดตามความคืบหน้า</h2>
+    <p>ค้นหานักเรียนเพื่อดูความคืบหน้าการส่งงาน</p>
+  </div>
+  <div class="filter-row">
+    <div class="fgroup">
+      <label>ห้องเรียน</label>
+      <select id="progRoom" onchange="onProgRoomChange()"><option value="">-- เลือกห้องเรียน --</option></select>
+    </div>
+    <div class="fgroup">
+      <label>รายชื่อนักเรียน</label>
+      <select id="progStudent" onchange="renderProgressResult()"><option value="">-- เลือกนักเรียน --</option></select>
+    </div>
+  </div>
+  <div id="progressResult"></div>
+</div>
+
+<!-- VIEW: DATA MANAGEMENT -->
+<div id="viewData" class="view" hidden>
+  <div class="page-header">
+    <h2>⚙️ จัดการข้อมูล</h2>
+    <p>จัดการวิชาเรียน ห้องเรียน นักเรียน และงาน</p>
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+    <div class="section-tabs">
+      <button class="section-tab active" onclick="switchDataTab('subjects')">📚 วิชาเรียน</button>
+      <button class="section-tab" onclick="switchDataTab('rooms')">🏫 ห้องเรียน</button>
+      <button class="section-tab" onclick="switchDataTab('students')">👨‍🎓 นักเรียน</button>
+      <button class="section-tab" onclick="switchDataTab('assignments')">📋 งาน</button>
+    </div>
+    <button class="btn btn-outline btn-sm" onclick="$('changePwdModal').hidden=false">🔑 เปลี่ยนรหัสผ่าน</button>
+  </div>
+
+  <!-- Subjects Tab -->
+  <div id="tabSubjects">
+    <div class="dt-toolbar">
+      <div class="left"></div>
+      <button class="btn btn-primary" onclick="openSubjectModal()">+ เพิ่มวิชา</button>
+    </div>
+    <div class="card">
+      <div id="subjectsTableWrap"></div>
+    </div>
+  </div>
+
+  <!-- Rooms Tab -->
+  <div id="tabRooms" hidden>
+    <div class="dt-toolbar">
+      <div class="left">
+        <button class="btn btn-danger btn-sm" id="deleteRoomsBtn" onclick="deleteSelected('rooms')" hidden>🗑 ลบที่เลือก</button>
+      </div>
+      <button class="btn btn-primary" onclick="openRoomModal()">+ สร้างห้องเรียน</button>
+    </div>
+    <div class="card">
+      <div id="roomsTableWrap"></div>
+    </div>
+  </div>
+
+  <!-- Students Tab -->
+  <div id="tabStudents" hidden>
+    <div class="dt-toolbar">
+      <div class="left">
+        <select id="filterStudentRoom" onchange="renderStudentsTable()" style="width:160px">
+          <option value="">-- ทุกห้อง --</option>
+        </select>
+        <button class="btn btn-danger btn-sm" id="deleteStudentsBtn" onclick="deleteSelected('students')" hidden>🗑 ลบที่เลือก</button>
+      </div>
+      <button class="btn btn-outline" onclick="openCsvModal()" style="display:flex;align-items:center;gap:6px">📥 นำเข้า CSV</button>
+      <button class="btn btn-primary" onclick="openStudentModal()">+ เพิ่มนักเรียน</button>
+    </div>
+    <div class="card">
+      <div id="studentsTableWrap"></div>
+    </div>
+  </div>
+
+  <!-- Assignments Tab -->
+  <div id="tabAssignments" hidden>
+    <div class="dt-toolbar">
+      <div class="left">
+        <select id="filterAsnRoom" onchange="onFilterAsnRoomChange()" style="width:160px">
+          <option value="">-- ทุกห้อง --</option>
+        </select>
+        <select id="filterAsnSubject" onchange="renderAssignmentsTable()" style="width:160px">
+          <option value="">-- ทุกวิชา --</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="openAssignmentModal()">+ เพิ่มงาน</button>
+    </div>
+    <div class="card">
+      <div id="assignmentsTableWrap"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════
+const $ = id => document.getElementById(id);
+let _editId = null;
+
+// ═══════════════════════════════════════════
+//  STATE & STORAGE
+// ═══════════════════════════════════════════
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz2bJ3rerx9CzhW7ssqgjlJINNYVxPMObeAmnOpXbtgf2uxJURx7FZd9pNJ4ytBrjWorQ/exec';
+const GRADES = ['ป.1','ป.2','ป.3','ป.4','ป.5','ป.6','ม.1','ม.2','ม.3'];
+let DB = {
+  password: '13579',
+  rooms: GRADES.map((n,i) => ({id:'r'+i, name:n})),
+  subjects: [],
+  students: [],
+  assignments: [],
+  scores: {}
+};
+let SESSION = { loggedIn: false };
+let _saveTimer = null;
+
+async function loadDB(){
+  try {
+    const timeout = new Promise((_,rej) => setTimeout(() => rej(new Error('timeout')), 8000));
+    const res = await Promise.race([fetch(SCRIPT_URL + '?action=getAll'), timeout]);
+    const json = await res.json();
+    if(json.ok && json.data) DB = json.data;
+  } catch(e){
+    console.warn('loadDB failed:', e.message);
+    // ใช้ค่าเริ่มต้น — หน้าเว็บยังทำงานได้ปกติ
+  }
+}
+
+function saveDB(){
+  // debounce: รอ 800ms หลังการเปลี่ยนแปลงล่าสุด แล้วค่อยบันทึก
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(async () => {
+    try {
+      await fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'saveAll', db: DB })
+      });
+    } catch(e){
+      console.warn('saveDB failed:', e);
+      toast('⚠️ บันทึกไม่สำเร็จ กรุณาตรวจสอบการเชื่อมต่อ');
+    }
+  }, 800);
+}
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+// ═══════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════
+let _tt;
+function toast(msg){
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(_tt); _tt = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ═══════════════════════════════════════════
+//  NAVIGATION & AUTH
+// ═══════════════════════════════════════════
+const ADMIN_VIEWS = ['home','score','data'];
+let _currentView = 'progress';
+
+function goView(v){
+  if(ADMIN_VIEWS.includes(v) && !SESSION.loggedIn){
+    _pendingView = v;
+    $('loginPwd').value = '';
+    $('loginErr').style.display = 'none';
+    $('loginModal').hidden = false;
+    setTimeout(() => $('loginPwd').focus(), 50);
+    return;
+  }
+  _currentView = v;
+  document.querySelectorAll('.view').forEach(el => { el.classList.remove('active'); el.hidden = true; });
+  document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+  const vEl = $('view' + v.charAt(0).toUpperCase() + v.slice(1));
+  if(vEl){ vEl.hidden = false; vEl.classList.add('active'); }
+  document.querySelectorAll(`[data-view="${v}"]`).forEach(el => el.classList.add('active'));
+  refreshView(v);
+}
+
+function refreshView(v){
+  if(v === 'home') { populateHomeFilters(); renderHomeTable(); }
+  if(v === 'score') { populateScoreFilters(); }
+  if(v === 'progress') { populateProgFilters(); }
+  if(v === 'data') { renderDataView(); }
+}
+
+let _pendingView = null;
+function doLogin(){
+  const pwd = $('loginPwd').value;
+  const correctPwd = (DB.password || '13579').toString().trim();
+  if(pwd.trim() === correctPwd){
+    SESSION.loggedIn = true;
+    $('loginModal').hidden = true;
+    document.querySelectorAll('.admin-tab').forEach(el => el.hidden = false);
+    $('adminLoginBtn').hidden = true;
+    $('logoutBtn').hidden = false;
+    if(_pendingView){ goView(_pendingView); _pendingView = null; }
+  } else {
+    $('loginErr').style.display = '';
+    $('loginPwd').select();
+  }
+}
+function showAdminLogin(){
+  _pendingView = 'home';
+  $('loginPwd').value = '';
+  $('loginErr').style.display = 'none';
+  $('loginModal').hidden = false;
+  setTimeout(() => $('loginPwd').focus(), 50);
+}
+function doLogout(){
+  SESSION.loggedIn = false;
+  // ซ่อน admin tabs ทันที
+  document.querySelectorAll('.admin-tab').forEach(el => el.hidden = true);
+  $('adminLoginBtn').hidden = false;
+  $('logoutBtn').hidden = true;
+  goView('progress');
+  toast('ออกจากระบบแล้ว');
+  // โหลดข้อมูลใหม่ใน background
+  loadDB().then(() => populateProgFilters());
+}
+function closeLogin(){
+  $('loginModal').hidden = true; _pendingView = null;
+}
+function showForgot(){
+  $('loginModal').hidden = true;
+  $('forgotModal').hidden = false;
+}
+function closeForgot(){
+  $('forgotModal').hidden = true;
+  $('loginModal').hidden = false;
+}
+function copyEmail(){
+  const email = $('adminEmail').textContent;
+  navigator.clipboard.writeText(email).then(() => toast('คัดลอกอีเมลแล้ว'))
+    .catch(() => { toast('กรุณาคัดลอกอีเมลเอง'); });
+}
+function openGmail(){
+  const email = $('adminEmail').textContent;
+  const url = 'https://mail.google.com/mail/?view=cm&to=' + encodeURIComponent(email) + '&subject=' + encodeURIComponent('ลืมรหัสผ่าน - ระบบติดตามการส่งงาน');
+  window.open(url, '_blank');
+}
+function doChangePwd(){
+  const old = $('cpOld').value, nw = $('cpNew').value, nw2 = $('cpNew2').value;
+  const err = $('cpErr');
+  if(old !== DB.password){ err.textContent = 'รหัสผ่านเดิมไม่ถูกต้อง'; err.style.display = ''; return; }
+  if(!nw.trim()){ err.textContent = 'กรุณาใส่รหัสผ่านใหม่'; err.style.display = ''; return; }
+  if(nw !== nw2){ err.textContent = 'รหัสผ่านไม่ตรงกัน'; err.style.display = ''; return; }
+  err.style.display = 'none';
+  DB.password = nw; saveDB();
+  $('changePwdModal').hidden = true;
+  toast('เปลี่ยนรหัสผ่านสำเร็จ');
+}
+$('loginPwd').addEventListener('keydown', e => { if(e.key === 'Enter') doLogin(); });
+
+// ═══════════════════════════════════════════
+//  HOME VIEW
+// ═══════════════════════════════════════════
+function populateHomeFilters(){
+  const rSel = $('homeRoom'), sSel = $('homeSubject');
+  rSel.innerHTML = '<option value="">-- ทุกห้อง --</option>';
+  DB.rooms.forEach(r => rSel.innerHTML += `<option value="${r.id}">${r.name}</option>`);
+  sSel.innerHTML = '<option value="">-- ทุกวิชา --</option>';
+  DB.subjects.forEach(s => sSel.innerHTML += `<option value="${s.id}">${s.name}</option>`);
+  renderHomeTable();
+}
+
+function resetHomeFilter(){
+  $('homeRoom').value = ''; $('homeSubject').value = '';
+  renderHomeTable();
+}
+
+function renderHomeTable(){
+  const rId = $('homeRoom').value, sId = $('homeSubject').value;
+  // Update subject filter based on room
+  const sSel = $('homeSubject');
+  const curS = sSel.value;
+  sSel.innerHTML = '<option value="">-- ทุกวิชา --</option>';
+  const filteredSubs = rId ? DB.subjects.filter(s => s.roomIds && s.roomIds.includes(rId)) : DB.subjects;
+  filteredSubs.forEach(s => sSel.innerHTML += `<option value="${s.id}">${s.name}</option>`);
+  if(curS && filteredSubs.find(s => s.id === curS)) sSel.value = curS;
+
+  const selSId = sSel.value;
+  // Filter students
+  let students = DB.students.slice();
+  if(rId) students = students.filter(st => st.roomId === rId);
+
+  // Filter subjects to show
+  let subjects = selSId ? DB.subjects.filter(s => s.id === selSId) : filteredSubs;
+
+  // Stats
+  let totalSub = 0, totalMiss = 0;
+  students.forEach(st => {
+    subjects.forEach(sub => {
+      const asmts = DB.assignments.filter(a => a.subjectId === sub.id && a.roomId === st.roomId);
+      asmts.forEach(a => {
+        const sc = DB.scores[st.id + '_' + a.id];
+        if(sc !== undefined && sc > 0) totalSub++;
+        else totalMiss++;
+      });
+    });
+  });
+  const total = totalSub + totalMiss;
+  const pct = total > 0 ? Math.round(totalSub/total*100) : 0;
+
+  $('homeStats').innerHTML = `
+    <div class="stat-card"><div class="sc-val">${students.length}</div><div class="sc-lbl">นักเรียนทั้งหมด</div></div>
+    <div class="stat-card"><div class="sc-val">${subjects.length}</div><div class="sc-lbl">รายวิชา</div></div>
+    <div class="stat-card"><div class="sc-val">${totalSub}</div><div class="sc-lbl">ส่งงานแล้ว</div></div>
+    <div class="stat-card"><div class="sc-val" style="color:var(--err)">${totalMiss}</div><div class="sc-lbl">ขาดส่ง</div></div>
+    <div class="stat-card"><div class="sc-val" style="color:${pct>=80?'var(--ok)':pct>=50?'var(--warn)':'var(--err)'}">${pct}%</div><div class="sc-lbl">ส่งงานโดยรวม</div></div>
+  `;
+
+  const wrap = $('homeTableWrap');
+  if(!students.length){ wrap.innerHTML = emptyState('ไม่พบนักเรียน','ลองเปลี่ยนตัวกรอง'); return; }
+  if(!subjects.length){ wrap.innerHTML = emptyState('ไม่มีวิชา','กรุณาเพิ่มวิชาที่มีในห้องนี้'); return; }
+
+  // Build table: each row is a student, columns per subject: submitted/missing/%
+  let header = `<tr><th>ชื่อนักเรียน</th><th class="num">ห้อง</th>`;
+  subjects.forEach(s => { header += `<th class="num" colspan="3" style="text-align:center">${s.name}</th>`; });
+  header += '</tr><tr><th></th><th></th>';
+  subjects.forEach(() => { header += `<th class="num">ส่งแล้ว</th><th class="num">ขาดส่ง</th><th class="num">%</th>`; });
+  header += '</tr>';
+
+  let rows = '';
+  // Sort by room then number
+  const sorted = students.slice().sort((a,b) => {
+    if(a.roomId !== b.roomId) return a.roomId.localeCompare(b.roomId);
+    return (parseInt(a.number)||0) - (parseInt(b.number)||0);
+  });
+  sorted.forEach(st => {
+    const room = DB.rooms.find(r => r.id === st.roomId);
+    rows += `<tr><td>${st.number ? `<span class="chip">${st.number}</span> ` : ''}${escHtml(st.name)}</td><td class="num">${room ? escHtml(room.name) : '-'}</td>`;
+    subjects.forEach(sub => {
+      const asmts = DB.assignments.filter(a => a.subjectId === sub.id && a.roomId === st.roomId);
+      let sub_ok = 0, sub_miss = 0;
+      asmts.forEach(a => {
+        const sc = DB.scores[st.id + '_' + a.id];
+        if(sc !== undefined && sc > 0) sub_ok++;
+        else sub_miss++;
+      });
+      const t = sub_ok + sub_miss;
+      const p = t > 0 ? Math.round(sub_ok/t*100) : 0;
+      const color = p>=80?'ok':p>=50?'warn':'err';
+      rows += `<td class="num"><span class="badge badge-ok">${sub_ok}</span></td><td class="num"><span class="badge badge-err">${sub_miss}</span></td><td class="num"><span class="badge badge-${color}">${t?p+'%':'-'}</span></td>`;
+    });
+    rows += '</tr>';
+  });
+
+  wrap.innerHTML = `<div class="table-wrap" style="border:none;border-radius:0"><table><thead>${header}</thead><tbody>${rows}</tbody></table></div>`;
+  $('homeTableTitle').textContent = `รายชื่อนักเรียน — ความคืบหน้าการส่งงาน${selSId ? ' วิชา' + (DB.subjects.find(s=>s.id===selSId)||{}).name : ''}`;
+  renderHomeCharts(sorted, subjects);
+}
+
+const CHART_COLORS = ['#04543f','#7c3aed','#ea580c','#2563eb','#d97706','#0891b2','#e11d48','#0f766e','#b45309','#9333ea'];
+
+function renderHomeCharts(students, subjects){
+  const wrap = $('homeCharts');
+  if(!subjects.length || !students.length){ wrap.innerHTML = ''; return; }
+
+  let html = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px">';
+
+  subjects.forEach((sub, si) => {
+    const color = CHART_COLORS[si % CHART_COLORS.length];
+    // กลุ่มตามห้อง
+    const roomData = {};
+    students.forEach(st => {
+      const asmts = DB.assignments.filter(a => a.subjectId === sub.id && a.roomId === st.roomId);
+      if(!asmts.length) return;
+      if(!roomData[st.roomId]) roomData[st.roomId] = {ok:0, total:0};
+      asmts.forEach(a => {
+        const sc = DB.scores[st.id+'_'+a.id];
+        if(sc !== undefined && sc > 0) roomData[st.roomId].ok++;
+        roomData[st.roomId].total++;
+      });
+    });
+
+    const entries = Object.entries(roomData);
+    if(!entries.length){
+      html += `<div class="card" style="border-left:4px solid ${color}"><div class="card-header"><h3>${escHtml(sub.name)}</h3><span class="badge" style="background:${color}20;color:${color}">ยังไม่มีงาน</span></div><div class="card-body" style="padding:12px 20px">${emptyState('ยังไม่มีงาน','')}</div></div>`;
+      return;
+    }
+
+    const totOk = entries.reduce((s,[,d])=>s+d.ok,0);
+    const totAll = entries.reduce((s,[,d])=>s+d.total,0);
+    const totPct = totAll > 0 ? Math.round(totOk/totAll*100) : 0;
+
+    let bars = entries.map(([rId, data]) => {
+      const room = DB.rooms.find(r=>r.id===rId);
+      const pct = data.total > 0 ? Math.round(data.ok/data.total*100) : 0;
+      return `<div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px">
+          <span>${room ? escHtml(room.name) : rId}</span>
+          <span style="font-weight:700;color:${color}">${pct}%</span>
+        </div>
+        <div style="background:var(--brd);border-radius:20px;height:9px;overflow:hidden">
+          <div style="width:${pct}%;height:100%;border-radius:20px;background:${color};transition:width .5s"></div>
+        </div>
+        <div style="font-size:11px;color:var(--txt2);margin-top:2px">ส่ง ${data.ok} / ${data.total} งาน</div>
+      </div>`;
+    }).join('');
+
+    html += `<div class="card" style="border-left:4px solid ${color}">
+      <div class="card-header"><h3>${escHtml(sub.name)}</h3><span class="badge" style="background:${color}20;color:${color}">${totPct}%</span></div>
+      <div class="card-body" style="padding:12px 20px">${bars}</div>
+    </div>`;
+  });
+
+  html += '</div>';
+  wrap.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════
+//  SCORE VIEW
+// ═══════════════════════════════════════════
+function populateScoreFilters(){
+  const rSel = $('scoreRoom');
+  rSel.innerHTML = '<option value="">-- เลือกห้องเรียน --</option>';
+  DB.rooms.forEach(r => rSel.innerHTML += `<option value="${r.id}">${r.name}</option>`);
+  $('scoreSubject').innerHTML = '<option value="">-- เลือกวิชา --</option>';
+  renderScoreTable();
+}
+function onScoreRoomChange(){
+  const rId = $('scoreRoom').value;
+  const sSel = $('scoreSubject');
+  sSel.innerHTML = '<option value="">-- เลือกวิชา --</option>';
+  if(rId){
+    // รวมวิชาที่ผูกกับห้อง + วิชาที่มีงานในห้องนี้ (กันพลาด)
+    const subIds = new Set([
+      ...DB.subjects.filter(s => s.roomIds && s.roomIds.includes(rId)).map(s => s.id),
+      ...DB.assignments.filter(a => a.roomId === rId).map(a => a.subjectId)
+    ]);
+    // แสดงวิชาที่มีงานในห้องนั้น + ที่ผูกกับห้อง (แสดงทั้งหมดเพื่อกันพลาด)
+    DB.subjects.filter(s => subIds.has(s.id))
+      .forEach(s => sSel.innerHTML += `<option value="${s.id}">${s.name}</option>`);
+  }
+  renderScoreTable();
+}
+function renderScoreTable(){
+  const rId = $('scoreRoom').value, sId = $('scoreSubject').value;
+  const wrap = $('scoreTableWrap');
+  if(!rId || !sId){ wrap.innerHTML = `<div class="card"><div class="card-body">${emptyState('เลือกห้องเรียนและวิชา','เพื่อแสดงตารางกรอกคะแนน')}</div></div>`; return; }
+  const students = DB.students.filter(st => st.roomId === rId).sort((a,b) => (parseInt(a.number)||0)-(parseInt(b.number)||0));
+  const assignments = DB.assignments.filter(a => a.roomId === rId && a.subjectId === sId);
+  const sub = DB.subjects.find(s => s.id === sId);
+  if(!students.length){ wrap.innerHTML = `<div class="card"><div class="card-body">${emptyState('ไม่มีนักเรียนในห้องนี้','กรุณาเพิ่มนักเรียนก่อน')}</div></div>`; return; }
+  if(!assignments.length){ wrap.innerHTML = `<div class="card"><div class="card-body">${emptyState('ยังไม่มีงานในวิชานี้','กรุณาเพิ่มงานก่อน')}</div></div>`; return; }
+
+  let head = '<tr><th>#</th><th>ชื่อนักเรียน</th>';
+  assignments.forEach(a => head += `<th class="num">${escHtml(a.name)}<br><span style="font-size:11px;font-weight:400">/${a.maxScore}</span></th>`);
+  head += '<th class="num">รวมส่ง</th></tr>';
+
+  let rows = '';
+  students.forEach(st => {
+    let subCount = 0;
+    let cells = '';
+    assignments.forEach(a => {
+      const key = st.id + '_' + a.id;
+      const sc = DB.scores[key];
+      const hasScore = sc !== undefined && sc !== '';
+      if(hasScore && sc > 0) subCount++;
+      cells += `<td class="score-cell num"><input type="number" min="0" max="${a.maxScore}" value="${hasScore ? sc : ''}" data-stid="${st.id}" data-aid="${a.id}" data-max="${a.maxScore}" oninput="onScoreInput(this)" class="${hasScore && sc > 0 ? 'has-score' : ''}"></td>`;
+    });
+    rows += `<tr><td class="num text-muted">${st.number || '-'}</td><td>${escHtml(st.name)}</td>${cells}<td class="num"><span class="badge badge-${subCount===assignments.length?'ok':subCount>0?'warn':'err'}">${subCount}/${assignments.length}</span></td></tr>`;
+  });
+
+  wrap.innerHTML = `<div class="card"><div class="card-header"><h3>📋 ${escHtml(sub.name)}</h3><span class="text-muted text-sm">${students.length} คน · ${assignments.length} งาน</span></div><div style="padding:0"><div class="table-wrap" style="border:none;border-radius:0 0 var(--r) var(--r)"><table><thead>${head}</thead><tbody>${rows}</tbody></table></div></div></div>`;
+}
+function onScoreInput(el){
+  const val = el.value.trim();
+  el.classList.toggle('has-score', val !== '' && parseFloat(val) > 0);
+}
+function saveScores(){
+  const inputs = document.querySelectorAll('.score-cell input');
+  inputs.forEach(inp => {
+    const key = inp.dataset.stid + '_' + inp.dataset.aid;
+    const val = inp.value.trim();
+    if(val === '') delete DB.scores[key];
+    else DB.scores[key] = Math.min(parseFloat(val)||0, parseFloat(inp.dataset.max));
+  });
+  saveDB();
+  toast('💾 บันทึกคะแนนเรียบร้อย');
+  renderScoreTable();
+}
+
+// ═══════════════════════════════════════════
+//  PROGRESS VIEW (PUBLIC)
+// ═══════════════════════════════════════════
+function populateProgFilters(){
+  const rSel = $('progRoom');
+  rSel.innerHTML = '<option value="">-- เลือกห้องเรียน --</option>';
+  DB.rooms.filter(r => DB.students.some(s => s.roomId === r.id))
+    .forEach(r => rSel.innerHTML += `<option value="${r.id}">${r.name}</option>`);
+  $('progStudent').innerHTML = '<option value="">-- เลือกนักเรียน --</option>';
+  $('progressResult').innerHTML = '';
+}
+function onProgRoomChange(){
+  const rId = $('progRoom').value;
+  const sSel = $('progStudent');
+  sSel.innerHTML = '<option value="">-- เลือกนักเรียน --</option>';
+  if(rId){
+    DB.students.filter(s => s.roomId === rId)
+      .sort((a,b) => (parseInt(a.number)||0)-(parseInt(b.number)||0))
+      .forEach(s => sSel.innerHTML += `<option value="${s.id}">${s.number ? s.number+'. ' : ''}${s.name}</option>`);
+  }
+  $('progressResult').innerHTML = '';
+}
+function renderProgressResult(){
+  const stId = $('progStudent').value;
+  const result = $('progressResult');
+  if(!stId){ result.innerHTML = ''; return; }
+  const st = DB.students.find(s => s.id === stId);
+  if(!st){ result.innerHTML = ''; return; }
+  const room = DB.rooms.find(r => r.id === st.roomId);
+
+  // Get subjects for this student
+  const mySubIds = st.subjectIds || [];
+  const subjects = DB.subjects.filter(s => mySubIds.includes(s.id));
+
+  // If no subjects assigned, show all subjects for their room
+  const displaySubs = subjects.length > 0 ? subjects : DB.subjects.filter(s => s.roomIds && s.roomIds.includes(st.roomId));
+
+  if(!displaySubs.length){
+    result.innerHTML = `<div class="card" style="margin-top:16px"><div class="card-body">${emptyState('ไม่มีวิชา','นักเรียนยังไม่ถูกกำหนดวิชาเรียน')}</div></div>`;
+    return;
+  }
+
+  // Build subject tables
+  let subTables = '';
+  let progressBars = '';
+
+  displaySubs.forEach((sub, si) => {
+    const asmts = DB.assignments.filter(a => a.subjectId === sub.id && a.roomId === st.roomId);
+    const PROG_COLORS = ['#04543f','#7c3aed','#ea580c','#2563eb','#d97706','#0891b2','#e11d48','#0f766e','#9333ea','#b45309'];
+    const subColor = PROG_COLORS[si % PROG_COLORS.length];
+    const subColorBg = subColor + '18';
+
+    if(!asmts.length){
+      const ph = ['งาน 1','งาน 2','งาน 3'];
+      const phHead = ph.map(n=>`<th class="num" style="color:var(--brd)">${n}</th>`).join('');
+      const phCells = ph.map(()=>`<td class="num" style="font-size:18px;color:var(--brd)">—</td>`).join('');
+      subTables += `<div class="card mt8" style="border-left:4px solid ${subColor}"><div class="card-header" style="background:${subColorBg}"><h3 style="color:${subColor}">${escHtml(sub.name)}</h3><span class="badge" style="background:${subColor}25;color:${subColor}">ยังไม่มีงาน</span></div><div style="overflow-x:auto"><table><thead><tr><th style="min-width:100px">งาน</th>${phHead}</tr></thead><tbody><tr><td class="text-sm fw6">ผลการส่ง</td>${phCells}</tr></tbody></table></div></div>`;
+      progressBars += `<div><div class="progress-label"><span style="color:${subColor};font-weight:700">${escHtml(sub.name)}</span><span class="text-muted">ยังไม่มีงาน</span></div><div class="progress-wrap"><div class="progress-bar" style="width:0%;background:${subColor}"></div></div></div>`;
+      return;
+    }
+
+    let headerCells = asmts.map(a => `<th class="num" style="background:${subColor};color:#fff">${escHtml(a.name)}</th>`).join('');
+    let submitted = 0;
+    let cells = asmts.map(a => {
+      const sc = DB.scores[st.id + '_' + a.id];
+      const ok = sc !== undefined && sc > 0;
+      if(ok) submitted++;
+      return `<td class="${ok ? 'check-ok' : 'check-err'}" title="${ok ? 'ส่งแล้ว: '+sc+' คะแนน' : 'ขาดส่ง'}">${ok ? '✓' : '✗'}</td>`;
+    }).join('');
+
+    const pct = Math.round(submitted / asmts.length * 100);
+
+    subTables += `
+      <div class="card mt8" style="border-left:4px solid ${subColor}">
+        <div class="card-header" style="background:${subColorBg}">
+          <h3 style="color:${subColor}">${escHtml(sub.name)}</h3>
+          <span class="badge" style="background:${subColor}25;color:${subColor}">${submitted}/${asmts.length} งาน</span>
+        </div>
+        <div style="overflow-x:auto"><table style="min-width:0">
+          <thead><tr><th style="min-width:100px">งาน</th>${headerCells}</tr></thead>
+          <tbody><tr><td class="text-sm fw6">ผลการส่ง</td>${cells}</tr></tbody>
+        </table></div>
+      </div>`;
+
+    progressBars += `
+      <div>
+        <div class="progress-label"><span style="color:${subColor};font-weight:700">${escHtml(sub.name)}</span><span>${pct}% (${submitted}/${asmts.length})</span></div>
+        <div class="progress-wrap"><div class="progress-bar" style="width:${pct}%;background:${subColor}"></div></div>
+      </div>`;
+  });
+
+  result.innerHTML = `
+    <div class="card mt8">
+      <div class="student-spotlight">
+        <div style="display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap">
+          ${room ? `<span class="chip">${escHtml(room.name)}</span>` : ''}
+          <span class="ss-name" style="font-size:24px">${escHtml(st.name)}</span>
+          ${st.number ? `<span class="chip">เลขที่ ${st.number}</span>` : ''}
+        </div>
+      </div>
+    </div>
+    ${subTables}
+    ${progressBars ? `<div class="card mt8"><div class="card-header"><h3>📈 สรุปความคืบหน้ารายวิชา</h3></div><div class="card-body"><div class="subject-progress">${progressBars}</div></div></div>` : ''}
+  `;
+}
+
+// ═══════════════════════════════════════════
+//  DATA MANAGEMENT
+// ═══════════════════════════════════════════
+let _dataTab = 'subjects';
+function switchDataTab(tab){
+  _dataTab = tab;
+  ['subjects','rooms','students','assignments'].forEach(t => {
+    const el = $('tab' + t.charAt(0).toUpperCase() + t.slice(1));
+    if(el) el.hidden = t !== tab;
+  });
+  document.querySelectorAll('.section-tab').forEach((el,i) => {
+    el.classList.toggle('active', ['subjects','rooms','students','assignments'][i] === tab);
+  });
+  renderDataView();
+}
+function renderDataView(){
+  if(_dataTab === 'subjects') renderSubjectsTable();
+  if(_dataTab === 'rooms') renderRoomsTable();
+  if(_dataTab === 'students') renderStudentsTable();
+  if(_dataTab === 'assignments') renderAssignmentsTable();
+  populateDataFilters();
+}
+function populateDataFilters(){
+  // Student room filter
+  const fsr = $('filterStudentRoom');
+  if(fsr){ const v = fsr.value; fsr.innerHTML = '<option value="">-- ทุกห้อง --</option>'; DB.rooms.forEach(r => fsr.innerHTML += `<option value="${r.id}">${r.name}</option>`); fsr.value = v; }
+  // Assignment filters
+  const far = $('filterAsnRoom');
+  if(far){ const v = far.value; far.innerHTML = '<option value="">-- ทุกห้อง --</option>'; DB.rooms.forEach(r => far.innerHTML += `<option value="${r.id}">${r.name}</option>`); far.value = v; }
+  onFilterAsnRoomChange();
+}
+function onFilterAsnRoomChange(){
+  const rId = $('filterAsnRoom') ? $('filterAsnRoom').value : '';
+  const fas = $('filterAsnSubject');
+  if(!fas) return;
+  const v = fas.value;
+  fas.innerHTML = '<option value="">-- ทุกวิชา --</option>';
+  const subs = rId ? DB.subjects.filter(s => s.roomIds && s.roomIds.includes(rId)) : DB.subjects;
+  subs.forEach(s => fas.innerHTML += `<option value="${s.id}">${s.name}</option>`);
+  fas.value = v;
+  renderAssignmentsTable();
+}
+
+// SUBJECTS
+function renderSubjectsTable(){
+  const wrap = $('subjectsTableWrap');
+  if(!DB.subjects.length){ wrap.innerHTML = emptyState('ยังไม่มีวิชา','กดปุ่ม + เพิ่มวิชา เพื่อเริ่มต้น'); return; }
+  let rows = DB.subjects.map(s => {
+    const rooms = (s.roomIds||[]).map(rid => { const r=DB.rooms.find(x=>x.id===rid); return r?`<span class="chip">${escHtml(r.name)}</span>`:''; }).join(' ');
+    return `<tr><td>${escHtml(s.name)}</td><td>${rooms||'<span class="text-muted">-</span>'}</td><td class="num">${DB.assignments.filter(a=>a.subjectId===s.id).length}</td><td style="text-align:right"><button class="btn-icon" onclick="openSubjectModal('${s.id}')">✏️</button> <button class="btn-icon" onclick="deleteSubject('${s.id}')">🗑</button></td></tr>`;
+  }).join('');
+  wrap.innerHTML = `<div class="table-wrap" style="border:none;border-radius:var(--r)"><table><thead><tr><th>ชื่อวิชา</th><th>ห้องเรียน</th><th class="num">งาน</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+function openSubjectModal(id=null){
+  _editId = id;
+  $('subjectModalTitle').textContent = id ? 'แก้ไขวิชา' : 'เพิ่มวิชาเรียน';
+  const sub = id ? DB.subjects.find(s=>s.id===id) : null;
+  $('sbjName').value = sub ? sub.name : '';
+  const container = $('sbjRooms');
+  container.innerHTML = DB.rooms.map(r => `<label class="cb-row"><input type="checkbox" value="${r.id}" ${sub&&sub.roomIds&&sub.roomIds.includes(r.id)?'checked':''}><label>${escHtml(r.name)}</label></label>`).join('');
+  $('subjectModal').hidden = false;
+  setTimeout(()=>$('sbjName').focus(),50);
+}
+function saveSubject(){
+  const name = $('sbjName').value.trim();
+  if(!name){ toast('⚠️ กรุณาใส่ชื่อวิชา'); return; }
+  const roomIds = [...$('sbjRooms').querySelectorAll('input:checked')].map(cb=>cb.value);
+  if(_editId){
+    const s = DB.subjects.find(x=>x.id===_editId);
+    if(s){ s.name=name; s.roomIds=roomIds; }
+  } else {
+    DB.subjects.push({id:uid(),name,roomIds});
+  }
+  saveDB(); $('subjectModal').hidden=true; toast('✅ บันทึกวิชาเรียบร้อย'); renderSubjectsTable();
+}
+function deleteSubject(id){
+  if(!confirm('ลบวิชานี้? (งานและคะแนนที่เกี่ยวข้องจะถูกลบด้วย)')) return;
+  DB.assignments.filter(a=>a.subjectId===id).forEach(a => {
+    DB.students.forEach(st => delete DB.scores[st.id+'_'+a.id]);
+  });
+  DB.assignments = DB.assignments.filter(a=>a.subjectId!==id);
+  DB.subjects = DB.subjects.filter(s=>s.id!==id);
+  saveDB(); toast('🗑 ลบวิชาแล้ว'); renderSubjectsTable();
+}
+
+// ROOMS
+function renderRoomsTable(){
+  const wrap = $('roomsTableWrap');
+  if(!DB.rooms.length){ wrap.innerHTML = emptyState('ยังไม่มีห้องเรียน','กดปุ่มสร้างห้องเรียนเพื่อเริ่มต้น'); return; }
+  let rows = DB.rooms.map(r => `<tr><td><label class="cb-row" style="padding:0"><input type="checkbox" class="room-cb" value="${r.id}" onchange="updateDeleteBtn('rooms')"> <label style="cursor:pointer">${escHtml(r.name)}</label></label></td><td class="num">${DB.students.filter(s=>s.roomId===r.id).length} คน</td><td class="num">${DB.subjects.filter(s=>s.roomIds&&s.roomIds.includes(r.id)).length} วิชา</td><td style="text-align:right"><button class="btn-icon" onclick="openRoomModal('${r.id}')">✏️</button> <button class="btn-icon" onclick="deleteRoom('${r.id}')">🗑</button></td></tr>`).join('');
+  wrap.innerHTML = `<div class="table-wrap" style="border:none;border-radius:var(--r)"><table><thead><tr><th>ชื่อห้องเรียน</th><th class="num">นักเรียน</th><th class="num">วิชา</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+function openRoomModal(id=null){
+  _editId = id;
+  $('roomModalTitle').textContent = id ? 'แก้ไขห้องเรียน' : 'สร้างห้องเรียน';
+  $('roomName').value = id ? (DB.rooms.find(r=>r.id===id)||{}).name||'' : '';
+  $('roomModal').hidden = false;
+  setTimeout(()=>$('roomName').focus(),50);
+}
+function saveRoom(){
+  const name = $('roomName').value.trim();
+  if(!name){ toast('⚠️ กรุณาใส่ชื่อห้องเรียน'); return; }
+  if(_editId){ const r=DB.rooms.find(x=>x.id===_editId); if(r) r.name=name; }
+  else DB.rooms.push({id:uid(),name});
+  saveDB(); $('roomModal').hidden=true; toast('✅ บันทึกห้องเรียนเรียบร้อย'); renderRoomsTable();
+}
+function deleteRoom(id){
+  if(DB.students.some(s=>s.roomId===id)){ toast('⚠️ ห้องนี้มีนักเรียน ลบนักเรียนก่อน'); return; }
+  if(!confirm('ลบห้องเรียนนี้?')) return;
+  DB.rooms = DB.rooms.filter(r=>r.id!==id);
+  DB.subjects.forEach(s=>{ if(s.roomIds) s.roomIds=s.roomIds.filter(x=>x!==id); });
+  saveDB(); toast('🗑 ลบห้องเรียนแล้ว'); renderRoomsTable();
+}
+function updateDeleteBtn(type){
+  const cbs = [...document.querySelectorAll(`.${type.slice(0,-1)}-cb:checked`)];
+  const btn = $('delete'+type.charAt(0).toUpperCase()+type.slice(1)+'Btn');
+  if(btn) btn.hidden = cbs.length === 0;
+}
+function deleteSelected(type){
+  const cbs = [...document.querySelectorAll(`.${type.slice(0,-1)}-cb:checked`)];
+  if(!cbs.length) return;
+  if(!confirm(`ลบ ${cbs.length} รายการที่เลือก?`)) return;
+  const ids = cbs.map(cb=>cb.value);
+  if(type==='rooms') ids.forEach(id=>deleteRoom(id));
+  if(type==='students') ids.forEach(id=>deleteStudent(id,true));
+  renderDataView();
+}
+
+// STUDENTS
+function renderStudentsTable(){
+  const wrap = $('studentsTableWrap');
+  const rFilter = $('filterStudentRoom') ? $('filterStudentRoom').value : '';
+  let students = DB.students.slice();
+  if(rFilter) students = students.filter(s=>s.roomId===rFilter);
+  students.sort((a,b) => {
+    if(a.roomId!==b.roomId) return a.roomId.localeCompare(b.roomId);
+    return (parseInt(a.number)||0)-(parseInt(b.number)||0);
+  });
+  if(!students.length){ wrap.innerHTML = emptyState('ยังไม่มีนักเรียน','กดปุ่มเพิ่มนักเรียนเพื่อเริ่มต้น'); return; }
+  let rows = students.map(s => {
+    const room = DB.rooms.find(r=>r.id===s.roomId);
+    const subs = (s.subjectIds||[]).map(sid=>{const sub=DB.subjects.find(x=>x.id===sid);return sub?`<span class="chip">${escHtml(sub.name)}</span>`:''}).join(' ');
+    return `<tr><td><label class="cb-row" style="padding:0"><input type="checkbox" class="student-cb" value="${s.id}" onchange="updateDeleteBtn('students')"><label style="cursor:pointer">${s.number?'<span class="text-muted text-sm">'+s.number+'.</span> ':''} ${escHtml(s.name)}</label></label></td><td>${room?`<span class="chip">${escHtml(room.name)}</span>`:'-'}</td><td>${subs||'<span class="text-muted">-</span>'}</td><td style="text-align:right"><button class="btn-icon" onclick="openStudentModal('${s.id}')">✏️</button> <button class="btn-icon" onclick="deleteStudent('${s.id}')">🗑</button></td></tr>`;
+  }).join('');
+  wrap.innerHTML = `<div class="table-wrap" style="border:none;border-radius:var(--r)"><table><thead><tr><th>ชื่อนักเรียน</th><th>ห้อง</th><th>วิชา</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+function openStudentModal(id=null){
+  _editId = id;
+  $('studentModalTitle').textContent = id ? 'แก้ไขข้อมูลนักเรียน' : 'เพิ่มนักเรียน';
+  const st = id ? DB.students.find(s=>s.id===id) : null;
+  $('stdName').value = st ? st.name : '';
+  $('stdNum').value = st ? st.number||'' : '';
+  // Rooms dropdown
+  const rSel = $('stdRoom');
+  rSel.innerHTML = '<option value="">-- เลือกห้องเรียน --</option>';
+  DB.rooms.forEach(r => rSel.innerHTML += `<option value="${r.id}" ${st&&st.roomId===r.id?'selected':''}>${r.name}</option>`);
+  // Subjects checkboxes
+  const container = $('stdSubjects');
+  container.innerHTML = DB.subjects.map(s => `<label class="cb-row"><input type="checkbox" value="${s.id}" ${st&&(st.subjectIds||[]).includes(s.id)?'checked':''}><label>${escHtml(s.name)}</label></label>`).join('') || '<p class="text-muted text-sm" style="padding:10px">ยังไม่มีวิชา</p>';
+  $('studentModal').hidden = false;
+  setTimeout(()=>$('stdName').focus(),50);
+}
+function saveStudent(){
+  const name = $('stdName').value.trim();
+  if(!name){ toast('⚠️ กรุณาใส่ชื่อนักเรียน'); return; }
+  const roomId = $('stdRoom').value;
+  if(!roomId){ toast('⚠️ กรุณาเลือกห้องเรียน'); return; }
+  const number = $('stdNum').value.trim();
+  const subjectIds = [...$('stdSubjects').querySelectorAll('input:checked')].map(cb=>cb.value);
+  if(_editId){
+    const s=DB.students.find(x=>x.id===_editId);
+    if(s){ s.name=name; s.roomId=roomId; s.number=number; s.subjectIds=subjectIds; }
+  } else {
+    DB.students.push({id:uid(),name,roomId,number,subjectIds});
+  }
+  saveDB(); $('studentModal').hidden=true; toast('✅ บันทึกข้อมูลนักเรียนเรียบร้อย'); renderStudentsTable();
+}
+// ═══════════════════════════════════════════
+//  CSV IMPORT
+// ═══════════════════════════════════════════
+let _csvParsed = [];
+let _csvSelectedSubjects = new Set();
+
+function openCsvModal(){
+  _csvParsed = [];
+  _csvSelectedSubjects.clear();
+  $('csvTextarea').value = '';
+  $('csvPanelPaste').hidden = false;
+  $('csvPanelPreview').hidden = true;
+  $('csvPanelSuccess').hidden = true;
+  $('csvFooter1').hidden = false;
+  $('csvFooter2').hidden = true;
+  $('csvFooter3').hidden = true;
+  $('csvBtnNext').disabled = true;
+  // step style reset
+  $('csvS1').style.color = 'var(--pri)';
+  $('csvS1').querySelector('span').style.background = 'var(--pri)';
+  $('csvS1').querySelector('span').style.color = '#fff';
+  $('csvS1').querySelector('span').style.border = 'none';
+  $('csvS2').style.color = 'var(--txt2)';
+  $('csvS2num').style.background = 'transparent';
+  $('csvS2num').style.border = '2px solid var(--brd)';
+  $('csvS2num').textContent = '2';
+  $('csvSep1').style.background = 'var(--brd)';
+  // populate room
+  const rSel = $('csvRoom');
+  rSel.innerHTML = '<option value="">-- เลือกห้อง --</option>';
+  DB.rooms.forEach(r => rSel.innerHTML += `<option value="${r.id}">${escHtml(r.name)}</option>`);
+  $('csvSubjectPh').textContent = '— เลือกห้องก่อน —';
+  $('csvSubjectList').innerHTML = '';
+  $('csvModal').hidden = false;
+}
+
+function closeCsvModal(){
+  $('csvModal').hidden = true;
+  $('csvSubjectDrop').hidden = true;
+}
+
+function onCsvRoomChange(){
+  _csvSelectedSubjects.clear();
+  $('csvSubjectDrop').hidden = true;
+  renderCsvSubjectTags();
+  const roomId = $('csvRoom').value;
+  if(!roomId){ $('csvSubjectPh').textContent = '— เลือกห้องก่อน —'; $('csvSubjectList').innerHTML = ''; return; }
+  const subs = DB.subjects.filter(s => !s.roomIds || s.roomIds.length === 0 || s.roomIds.includes(roomId));
+  if(!subs.length){ $('csvSubjectList').innerHTML = '<div style="padding:8px 10px;font-size:13px;color:var(--txt2)">ไม่มีวิชาในห้องนี้</div>'; return; }
+  $('csvSubjectList').innerHTML = subs.map(s => `
+    <label style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;cursor:pointer;font-size:14px;user-select:none;transition:background .12s" onmouseover="this.style.background='var(--pri-l)'" onmouseout="this.style.background=''">
+      <input type="checkbox" value="${s.id}" data-name="${escHtml(s.name)}" onchange="toggleCsvSubject('${s.id}','${escHtml(s.name)}')" style="accent-color:var(--pri);width:15px;height:15px"> ${escHtml(s.name)}
+    </label>`).join('');
+  updateCsvBtn();
+}
+
+function toggleCsvSubjectDrop(){
+  const drop = $('csvSubjectDrop');
+  if(!$('csvRoom').value){ toast('⚠️ เลือกห้องเรียนก่อน'); return; }
+  drop.hidden = !drop.hidden;
+  $('csvSubjectPicker').style.borderColor = drop.hidden ? 'var(--brd)' : 'var(--pri)';
+}
+
+function toggleCsvSubject(id, name){
+  if(_csvSelectedSubjects.has(id)) _csvSelectedSubjects.delete(id);
+  else _csvSelectedSubjects.add(id);
+  renderCsvSubjectTags();
+  updateCsvBtn();
+}
+
+function renderCsvSubjectTags(){
+  const picker = $('csvSubjectPicker');
+  picker.querySelectorAll('.csv-stag').forEach(el => el.remove());
+  const ph = $('csvSubjectPh');
+  if(_csvSelectedSubjects.size === 0){
+    ph.style.display = '';
+    ph.textContent = $('csvRoom').value ? '— เลือกวิชา —' : '— เลือกห้องก่อน —';
+  } else {
+    ph.style.display = 'none';
+    _csvSelectedSubjects.forEach(id => {
+      const cb = $('csvSubjectList').querySelector(`input[value="${id}"]`);
+      const name = cb ? cb.dataset.name : id;
+      const tag = document.createElement('span');
+      tag.className = 'csv-stag';
+      tag.style.cssText = 'display:inline-flex;align-items:center;gap:4px;background:var(--pri);color:#fff;font-size:12px;font-weight:600;padding:2px 9px;border-radius:20px';
+      tag.innerHTML = `${name} <span onclick="removeCsvSubject('${id}',event)" style="cursor:pointer;opacity:.8;font-size:14px;line-height:1">×</span>`;
+      picker.appendChild(tag);
+    });
+  }
+}
+
+function removeCsvSubject(id, e){
+  e.stopPropagation();
+  _csvSelectedSubjects.delete(id);
+  const cb = $('csvSubjectList').querySelector(`input[value="${id}"]`);
+  if(cb) cb.checked = false;
+  renderCsvSubjectTags();
+  updateCsvBtn();
+}
+
+function onCsvInput(){ updateCsvBtn(); }
+
+function updateCsvBtn(){
+  const hasRoom = !!$('csvRoom').value;
+  const hasText = $('csvTextarea').value.trim().length > 0;
+  $('csvBtnNext').disabled = !(hasRoom && hasText);
+}
+
+function parseCsvText(){
+  const lines = $('csvTextarea').value.trim().split('\n');
+  _csvParsed = [];
+  lines.forEach(line => {
+    line = line.trim(); if(!line) return;
+    const parts = line.split(/\t|,/);
+    const name = (parts[0]||'').trim();
+    const num = (parts[1]||'').trim();
+    if(name) _csvParsed.push({ name, num, ok: name.length > 1 });
+  });
+}
+
+function showCsvPreview(){
+  parseCsvText();
+  if(!_csvParsed.length){ toast('⚠️ ไม่พบข้อมูลที่จะนำเข้า'); return; }
+  // step style
+  $('csvS1').querySelector('span').textContent = '✓';
+  $('csvS2').style.color = 'var(--pri)';
+  $('csvS2num').style.background = 'var(--pri)';
+  $('csvS2num').style.color = '#fff';
+  $('csvS2num').style.border = 'none';
+  $('csvSep1').style.background = 'var(--ok)';
+  $('csvPanelPaste').hidden = true;
+  $('csvPanelPreview').hidden = false;
+  $('csvFooter1').hidden = true;
+  $('csvFooter2').hidden = false;
+  const ok = _csvParsed.filter(r=>r.ok).length;
+  const bad = _csvParsed.length - ok;
+  const room = DB.rooms.find(r=>r.id===$('csvRoom').value);
+  const subjNames = [..._csvSelectedSubjects].map(id=>{ const s=DB.subjects.find(x=>x.id===id); return s?s.name:''; }).filter(Boolean);
+  $('csvStats').innerHTML =
+    `<span style="display:inline-flex;align-items:center;gap:5px;background:var(--ok-bg);color:var(--ok);font-size:13px;font-weight:600;padding:5px 12px;border-radius:20px">✓ ${ok} คน พร้อมนำเข้า</span>` +
+    (subjNames.length ? `<span style="display:inline-flex;align-items:center;gap:5px;background:var(--pri-l);color:var(--pri);font-size:13px;font-weight:600;padding:5px 12px;border-radius:20px">📚 ${subjNames.join(', ')}</span>` : '') +
+    (bad ? `<span style="display:inline-flex;align-items:center;gap:5px;background:var(--err-bg);color:var(--err);font-size:13px;font-weight:600;padding:5px 12px;border-radius:20px">⚠ ${bad} รายการมีปัญหา</span>` : '');
+  $('csvImportCount').textContent = ok;
+  $('csvPreviewBody').innerHTML = _csvParsed.map((r,i) => `
+    <tr>
+      <td style="color:var(--txt2)">${i+1}</td>
+      <td><strong>${escHtml(r.name)}</strong></td>
+      <td>${escHtml(r.num)||'<span style="color:var(--txt2)">—</span>'}</td>
+      <td>${r.ok
+        ? '<span style="background:var(--ok-bg);color:var(--ok);font-size:12px;font-weight:600;padding:2px 8px;border-radius:20px">✓ โอเค</span>'
+        : '<span style="background:var(--err-bg);color:var(--err);font-size:12px;font-weight:600;padding:2px 8px;border-radius:20px">⚠ ชื่อสั้นเกิน</span>'}</td>
+    </tr>`).join('');
+}
+
+function backToCsvPaste(){
+  $('csvS1').querySelector('span').textContent = '1';
+  $('csvS2').style.color = 'var(--txt2)';
+  $('csvS2num').style.background = 'transparent';
+  $('csvS2num').style.border = '2px solid var(--brd)';
+  $('csvSep1').style.background = 'var(--brd)';
+  $('csvPanelPaste').hidden = false;
+  $('csvPanelPreview').hidden = true;
+  $('csvFooter1').hidden = false;
+  $('csvFooter2').hidden = true;
+}
+
+function doImportCsv(){
+  const roomId = $('csvRoom').value;
+  const subjectIds = [..._csvSelectedSubjects];
+  let count = 0;
+  _csvParsed.filter(r=>r.ok).forEach(r => {
+    DB.students.push({ id: uid(), name: r.name, roomId, number: r.num, subjectIds });
+    count++;
+  });
+  saveDB();
+  $('csvPanelPreview').hidden = true;
+  $('csvFooter2').hidden = true;
+  $('csvPanelSuccess').hidden = false;
+  $('csvFooter3').hidden = false;
+  const room = DB.rooms.find(r=>r.id===roomId);
+  $('csvSuccessMsg').textContent = `เพิ่มนักเรียน ${count} คน เข้าห้อง ${room?room.name:''} เรียบร้อยแล้ว`;
+  renderStudentsTable();
+}
+
+// close subject dropdown when clicking outside
+document.addEventListener('click', e => {
+  const drop = $('csvSubjectDrop');
+  const picker = $('csvSubjectPicker');
+  if(drop && !drop.hidden && !drop.contains(e.target) && picker && !picker.contains(e.target)){
+    drop.hidden = true;
+    picker.style.borderColor = 'var(--brd)';
+  }
+});
+
+function deleteStudent(id, silent=false){
+  if(!silent && !confirm('ลบนักเรียนคนนี้? (คะแนนทั้งหมดจะถูกลบด้วย)')) return;
+  DB.assignments.forEach(a => delete DB.scores[id+'_'+a.id]);
+  DB.students = DB.students.filter(s=>s.id!==id);
+  saveDB(); if(!silent) toast('🗑 ลบนักเรียนแล้ว'); if(!silent) renderStudentsTable();
+}
+
+// ASSIGNMENTS
+function renderAssignmentsTable(){
+  const wrap = $('assignmentsTableWrap');
+  const rFilter = $('filterAsnRoom') ? $('filterAsnRoom').value : '';
+  const sFilter = $('filterAsnSubject') ? $('filterAsnSubject').value : '';
+  let asmts = DB.assignments.slice();
+  if(rFilter) asmts = asmts.filter(a=>a.roomId===rFilter);
+  if(sFilter) asmts = asmts.filter(a=>a.subjectId===sFilter);
+  if(!asmts.length){ wrap.innerHTML = emptyState('ยังไม่มีงาน','กดปุ่มเพิ่มงานเพื่อเริ่มต้น'); return; }
+  let rows = asmts.map(a => {
+    const sub = DB.subjects.find(s=>s.id===a.subjectId);
+    const room = DB.rooms.find(r=>r.id===a.roomId);
+    return `<tr><td>${escHtml(a.name)}</td><td>${sub?`<span class="chip">${escHtml(sub.name)}</span>`:'-'}</td><td>${room?`<span class="chip">${escHtml(room.name)}</span>`:'-'}</td><td class="num">${a.maxScore}</td><td style="text-align:right"><button class="btn-icon" onclick="openAssignmentModal('${a.id}')">✏️</button> <button class="btn-icon" onclick="deleteAssignment('${a.id}')">🗑</button></td></tr>`;
+  }).join('');
+  wrap.innerHTML = `<div class="table-wrap" style="border:none;border-radius:var(--r)"><table><thead><tr><th>ชื่องาน</th><th>วิชา</th><th>ห้องเรียน</th><th class="num">คะแนนเต็ม</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+function openAssignmentModal(id=null){
+  _editId = id;
+  $('assignModalTitle').textContent = id ? 'แก้ไขงาน' : 'เพิ่มงาน';
+  const a = id ? DB.assignments.find(x=>x.id===id) : null;
+  $('asnName').value = a ? a.name : '';
+  $('asnMax').value = a ? a.maxScore : 10;
+  const rSel = $('asnRoom');
+  rSel.innerHTML = '<option value="">-- เลือกห้องเรียน --</option>';
+  DB.rooms.forEach(r => rSel.innerHTML += `<option value="${r.id}" ${a&&a.roomId===r.id?'selected':''}>${r.name}</option>`);
+  updateAsnSubjects(a ? a.subjectId : null);
+  $('assignmentModal').hidden = false;
+  setTimeout(()=>$('asnName').focus(),50);
+}
+function updateAsnSubjects(preselect=null){
+  const rId = $('asnRoom').value;
+  const sSel = $('asnSubject');
+  sSel.innerHTML = '<option value="">-- เลือกวิชา --</option>';
+  // แสดงวิชาทั้งหมดเสมอ ไม่กรองตามห้อง
+  DB.subjects.forEach(s => sSel.innerHTML += `<option value="${s.id}" ${s.id===preselect?'selected':''}>${s.name}</option>`);
+}
+function saveAssignment(){
+  const name = $('asnName').value.trim();
+  if(!name){ toast('⚠️ กรุณาใส่ชื่องาน'); return; }
+  const maxScore = parseInt($('asnMax').value)||10;
+  const roomId = $('asnRoom').value;
+  const subjectId = $('asnSubject').value;
+  if(!roomId){ toast('⚠️ กรุณาเลือกห้องเรียน'); return; }
+  if(!subjectId){ toast('⚠️ กรุณาเลือกวิชา'); return; }
+  if(_editId){
+    const a=DB.assignments.find(x=>x.id===_editId);
+    if(a){ a.name=name; a.maxScore=maxScore; a.roomId=roomId; a.subjectId=subjectId; }
+  } else {
+    DB.assignments.push({id:uid(),name,maxScore,roomId,subjectId});
+  }
+  saveDB(); $('assignmentModal').hidden=true; toast('✅ บันทึกงานเรียบร้อย'); renderAssignmentsTable();
+}
+function deleteAssignment(id){
+  if(!confirm('ลบงานนี้? (คะแนนทั้งหมดจะถูกลบด้วย)')) return;
+  DB.students.forEach(st => delete DB.scores[st.id+'_'+id]);
+  DB.assignments = DB.assignments.filter(a=>a.id!==id);
+  saveDB(); toast('🗑 ลบงานแล้ว'); renderAssignmentsTable();
+}
+
+// ═══════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════
+function escHtml(str=''){
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function emptyState(h,p){
+  return `<div class="empty"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><h4>${h}</h4><p>${p}</p></div>`;
+}
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if(e.target === overlay && overlay.id !== 'loginModal') overlay.hidden = true;
+  });
+});
+
+// ═══════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════
+(async () => {
+  // Wire CSV button (fallback for sandbox environments that block inline onclick)
+  const csvBtn = document.querySelector('[onclick="openCsvModal()"]');
+  if(csvBtn){ csvBtn.removeAttribute('onclick'); csvBtn.addEventListener('click', openCsvModal); }
+
+  await loadDB();
+  // ซ่อน loading overlay
+  const ov = $('loadingOverlay');
+  if(ov) ov.style.display = 'none';
+  // Show progress view by default (public)
+  document.querySelectorAll('.view').forEach(v => { v.hidden = true; v.classList.remove('active'); });
+  $('viewProgress').hidden = false; $('viewProgress').classList.add('active');
+  document.querySelector('[data-view="progress"]').classList.add('active');
+  populateProgFilters();
+})();
+</script>
